@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>英语听写练习</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>英语听写练习</h1>
+            <p class="subtitle">滑动卡片，听写数字与日期</p>
+        </header>
+
+        <nav class="controls">
+            <div class="mode-tabs">
+                <button class="tab active" data-mode="number">数字</button>
+                <button class="tab" data-mode="date">日期</button>
+            </div>
+            <div class="speed-group">
+                <label>语速</label>
+                <div class="speed-btns">
+                    <button class="speed-btn" data-speed="0.6">慢速</button>
+                    <button class="speed-btn active" data-speed="0.85">正常</button>
+                    <button class="speed-btn" data-speed="1.1">快速</button>
+                </div>
+            </div>
+            <div class="repeat-group">
+                <label>朗读次数</label>
+                <div class="repeat-btns">
+                    <button class="repeat-btn active" data-count="1">1次</button>
+                    <button class="repeat-btn" data-count="2">2次</button>
+                    <button class="repeat-btn" data-count="3">3次</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="swiper-area">
+            <div class="swiper" id="mainSwiper">
+                <div class="swiper-wrapper" id="swiperWrapper"></div>
+            </div>
+        </main>
+
+        <footer class="hint">
+            <p>左滑获取新内容</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
