@@ -148,8 +148,34 @@
         return { year: year, month: month, day: day };
     }
 
+    function generateTime() {
+        var is24Hour = Math.random() < 0.5;
+        var hour, minute, period;
+        
+        if (is24Hour) {
+            hour = Math.floor(Math.random() * 24);
+            minute = Math.floor(Math.random() * 60);
+            period = null;
+        } else {
+            hour = Math.floor(Math.random() * 12) + 1;
+            minute = Math.floor(Math.random() * 60);
+            period = Math.random() < 0.5 ? 'AM' : 'PM';
+        }
+        
+        return { hour: hour, minute: minute, period: period, is24Hour: is24Hour };
+    }
+
     function formatDate(date) {
         return MONTHS[date.month] + ' ' + date.day + ', ' + date.year;
+    }
+
+    function formatTime(time) {
+        var minuteStr = time.minute < 10 ? '0' + time.minute : time.minute;
+        if (time.is24Hour) {
+            var hourStr = time.hour < 10 ? '0' + time.hour : time.hour;
+            return hourStr + ':' + minuteStr;
+        }
+        return time.hour + ':' + minuteStr + ' ' + time.period;
     }
 
     function toOrdinal(n) {
@@ -166,7 +192,69 @@
             }
             return String(num);
         }
-        return MONTHS[content.date.month] + ' ' + toOrdinal(content.date.day) + ', ' + content.date.year;
+        if (content.type === 'date') {
+            return MONTHS[content.date.month] + ' ' + toOrdinal(content.date.day) + ', ' + content.date.year;
+        }
+        if (content.time.is24Hour) {
+            var hourStr = content.time.hour < 10 ? 'oh ' + hourToWords(content.time.hour) : hourToWords(content.time.hour);
+            var minuteWords = minuteToWords24(content.time.minute);
+            return hourStr + ' ' + minuteWords;
+        }
+        var hourWords = hourToWords(content.time.hour);
+        var minuteWords = minuteToWords(content.time.minute);
+        return hourWords + ' ' + minuteWords + ' ' + content.time.period;
+    }
+
+    function hourToWords(h) {
+        if (h >= 13 && h <= 19) {
+            var teens = ['thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+            return teens[h - 13];
+        }
+        var tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty'];
+        var ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+        
+        if (h < 13) {
+            var ones_full = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+                'ten', 'eleven', 'twelve'];
+            return ones_full[h];
+        }
+        if (h >= 20) {
+            if (h % 10 === 0) return tens[Math.floor(h / 10)];
+            return tens[Math.floor(h / 10)] + '-' + ones[h % 10];
+        }
+        return '';
+    }
+
+    function minuteToWords(m) {
+        if (m === 0) return "o'clock";
+        if (m === 15) return 'fifteen';
+        if (m === 30) return 'thirty';
+        if (m === 45) return 'forty-five';
+        
+        var tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty'];
+        var ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+        
+        if (m < 10) return ones[m];
+        if (m < 20) {
+            var teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+            return teens[m - 10];
+        }
+        if (m % 10 === 0) return tens[Math.floor(m / 10)];
+        return tens[Math.floor(m / 10)] + '-' + ones[m % 10];
+    }
+
+    function minuteToWords24(m) {
+        var tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty'];
+        var ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+        
+        if (m === 0) return 'hours';
+        if (m < 10) return ones[m];
+        if (m < 20) {
+            var teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+            return teens[m - 10];
+        }
+        if (m % 10 === 0) return tens[Math.floor(m / 10)];
+        return tens[Math.floor(m / 10)] + '-' + ones[m % 10];
     }
 
     function numberToWords(n) {
@@ -212,10 +300,14 @@
             content.type = 'number';
             content.value = generateNumber();
             content.display = content.value.toLocaleString('en-US');
-        } else {
+        } else if (currentMode === 'date') {
             content.type = 'date';
             content.date = generateDate();
             content.display = formatDate(content.date);
+        } else {
+            content.type = 'time';
+            content.time = generateTime();
+            content.display = formatTime(content.time);
         }
         content.speech = buildSpeechText(content);
         content.spellOut = content.type === 'number' ? numberToWords(content.value) : content.speech;
@@ -223,7 +315,7 @@
         var slideEl = document.createElement('div');
         slideEl.className = 'swiper-slide';
 
-        var label = content.type === 'number' ? 'Number' : 'Date';
+        var label = content.type === 'number' ? 'Number' : content.type === 'date' ? 'Date' : 'Time';
         var valueClass = content.type === 'date' ? 'card-value date-value' : 'card-value';
 
         slideEl.innerHTML =
