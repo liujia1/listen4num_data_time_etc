@@ -35,25 +35,19 @@
                     <button class="repeat-btn" data-count="3">3次</button>
                 </div>
             </div>
+            <div class="voice-group">
+                <label>朗读声音</label>
+                <select id="voiceSelect" aria-label="选择朗读声音">
+                    <option value="">默认（Edge/系统默认）</option>
+                </select>
+            </div>
         </nav>
 
-        <div class="layout">
-            <main class="swiper-area">
-                <div class="swiper" id="mainSwiper">
-                    <div class="swiper-wrapper" id="swiperWrapper"></div>
-                </div>
-            </main>
-            <aside class="sidebar" aria-label="使用说明">
-                <h2>使用说明</h2>
-                <ul>
-                    <li>滑动卡片以生成新内容</li>
-                    <li>数字范围 1-9999，日期为随机年月日</li>
-                    <li>点击朗读朗读卡片中的文本，可重复朗读</li>
-                    <li>桌面端会自动扩展卡片区域并显示侧边说明</li>
-                </ul>
-                <p>在 Edge 浏览器中可获得更自然的 TTS 效果</p>
-            </aside>
-        </div>
+        <main class="swiper-area">
+            <div class="swiper" id="mainSwiper">
+                <div class="swiper-wrapper" id="swiperWrapper"></div>
+            </div>
+        </main>
 
         <footer class="hint">
             <p>左滑获取新内容</p>

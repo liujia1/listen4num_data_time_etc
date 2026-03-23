@@ -12,6 +12,10 @@
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
+    // Voice management for English TTS
+    var voiceList = [];
+    var currentVoiceOverride = null;
+    
 
     function init() {
         initVoices();
@@ -32,12 +36,37 @@
                     voices.find(function (v) { return v.lang === 'en-US' && v.name.includes('Microsoft'); }) ||
                     voices.find(function (v) { return v.lang === 'en-US'; }) ||
                     voices.find(function (v) { return v.lang.startsWith('en'); });
+                // Build voice list for UI (en* voices)
+                voiceList = voices.filter(function (v) {
+                    return v.lang && v.lang.toLowerCase().startsWith('en');
+                });
+                populateVoiceListUI(voices);
             }
         }
         tryLoad();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = tryLoad;
         }
+    }
+
+    // Populate the voice selection UI from available voices
+    function populateVoiceListUI(voices) {
+        var select = document.getElementById('voiceSelect');
+        if (!select) return;
+        // Refill options
+        select.innerHTML = '';
+        var optDefault = document.createElement('option');
+        optDefault.value = '';
+        optDefault.text = '默认（Edge/系统默认）';
+        select.appendChild(optDefault);
+        voiceList.forEach(function (v) {
+            var opt = document.createElement('option');
+            opt.value = v.name;
+            opt.text = (v.name || 'Voice') + ' (' + (v.lang || '') + ')';
+            select.appendChild(opt);
+        });
+        // Reset override when voices change; user can re-select
+        currentVoiceOverride = null;
     }
 
     function initSwiper() {
@@ -49,16 +78,6 @@
             touchAngle: 30,
             touchRatio: 0.8,
             resistanceRatio: 0.3,
-            breakpoints: {
-                768: {
-                    slidesPerView: 1.8,
-                    spaceBetween: 20
-                },
-                1024: {
-                    slidesPerView: 2.5,
-                    spaceBetween: 24
-                }
-            },
             on: {
                 slideChangeTransitionEnd: function () {
                     var activeIndex = swiper.activeIndex;
@@ -245,7 +264,10 @@
         utterance.rate = speechRate;
         utterance.pitch = 1;
         utterance.volume = 1;
-        if (selectedVoice) {
+        // Prefer override if user selected a voice in the UI; fallback to default selectedVoice
+        if (currentVoiceOverride) {
+            utterance.voice = currentVoiceOverride;
+        } else if (selectedVoice) {
             utterance.voice = selectedVoice;
         }
         utterance.onend = function () {
@@ -291,6 +313,15 @@
                 repeatCount = parseInt(btn.dataset.count, 10);
             });
         });
+
+        // Voice selection change (override) - only affects current read
+        var voiceSelect = document.getElementById('voiceSelect');
+        if (voiceSelect) {
+            voiceSelect.addEventListener('change', function () {
+                var name = voiceSelect.value;
+                currentVoiceOverride = voiceList.find(function (v) { return v.name === name; }) || null;
+            });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', init);
