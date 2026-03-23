@@ -12,10 +12,6 @@
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
-    // Voice management for English TTS
-    var voiceList = [];
-    var currentVoiceOverride = null;
-    
 
     function init() {
         initVoices();
@@ -26,47 +22,97 @@
     }
 
     function initVoices() {
-        function tryLoad() {
+        var voiceSelect = document.getElementById('voiceSelect');
+        
+        function populateVoices() {
             var voices = speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                selectedVoice =
-                    voices.find(function (v) { return v.lang === 'en-US' && v.localService === false && v.name.includes('Natural'); }) ||
-                    voices.find(function (v) { return v.lang === 'en-US' && v.name.includes('Online'); }) ||
-                    voices.find(function (v) { return v.lang === 'en-US' && v.name.includes('Natural'); }) ||
-                    voices.find(function (v) { return v.lang === 'en-US' && v.name.includes('Microsoft'); }) ||
-                    voices.find(function (v) { return v.lang === 'en-US'; }) ||
-                    voices.find(function (v) { return v.lang.startsWith('en'); });
-                // Build voice list for UI (en* voices)
-                voiceList = voices.filter(function (v) {
-                    return v.lang && v.lang.toLowerCase().startsWith('en');
+            console.log('Available voices:', voices.length);
+            
+            if (voices.length > 0 && voiceSelect) {
+                voiceSelect.innerHTML = '';
+                
+                // 筛选英文语音
+                var englishVoices = voices.filter(function(v) {
+                    return v.lang.startsWith('en');
                 });
-                populateVoiceListUI(voices);
+                
+                console.log('English voices:', englishVoices.length);
+                
+                if (englishVoices.length === 0) {
+                    englishVoices = voices;
+                }
+                
+                // 按优先级排序：Natural > Online > Microsoft > en-US > 其他
+                var priorityOrder = [
+                    { name: 'Natural', weight: 5 },
+                    { name: 'Online', weight: 4 },
+                    { name: 'Microsoft', weight: 3 },
+                    { name: 'Google', weight: 2 }
+                ];
+                
+                englishVoices.sort(function(a, b) {
+                    var aScore = 0, bScore = 0;
+                    
+                    priorityOrder.forEach(function(p) {
+                        if (a.name.includes(p.name)) aScore += p.weight;
+                        if (b.name.includes(p.name)) bScore += p.weight;
+                    });
+                    
+                    if (a.lang === 'en-US') aScore += 1;
+                    if (b.lang === 'en-US') bScore += 1;
+                    
+                    return bScore - aScore;
+                });
+                
+                // 添加一个默认选项
+                var defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '请选择发音人';
+                voiceSelect.appendChild(defaultOption);
+                
+                // 添加所有语音选项
+                englishVoices.forEach(function(voice) {
+                    var option = document.createElement('option');
+                    option.value = voice.name;
+                    option.textContent = voice.name + ' (' + voice.lang + ')';
+                    voiceSelect.appendChild(option);
+                });
+                
+                // 自动选择最优语音
+                if (englishVoices.length > 0) {
+                    selectedVoice = englishVoices[0];
+                    voiceSelect.value = selectedVoice.name;
+                    console.log('Auto-selected voice:', selectedVoice.name);
+                }
+            } else if (voiceSelect) {
+                voiceSelect.innerHTML = '<option value="">加载中... (' + voices.length + ')</option>';
             }
         }
-        tryLoad();
+        
+        // 立即尝试加载
+        populateVoices();
+        
+        // 监听语音列表变化事件
         if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = tryLoad;
+            speechSynthesis.onvoiceschanged = populateVoices;
         }
-    }
-
-    // Populate the voice selection UI from available voices
-    function populateVoiceListUI(voices) {
-        var select = document.getElementById('voiceSelect');
-        if (!select) return;
-        // Refill options
-        select.innerHTML = '';
-        var optDefault = document.createElement('option');
-        optDefault.value = '';
-        optDefault.text = '默认（Edge/系统默认）';
-        select.appendChild(optDefault);
-        voiceList.forEach(function (v) {
-            var opt = document.createElement('option');
-            opt.value = v.name;
-            opt.text = (v.name || 'Voice') + ' (' + (v.lang || '') + ')';
-            select.appendChild(opt);
+        
+        // 多次延迟重试，确保浏览器已加载语音
+        setTimeout(populateVoices, 100);
+        setTimeout(populateVoices, 300);
+        setTimeout(populateVoices, 500);
+        setTimeout(populateVoices, 1000);
+        
+        voiceSelect.addEventListener('change', function() {
+            var selectedVoiceName = voiceSelect.value;
+            var voices = speechSynthesis.getVoices();
+            if (selectedVoiceName) {
+                selectedVoice = voices.find(function(v) {
+                    return v.name === selectedVoiceName;
+                });
+                console.log('Selected voice:', selectedVoice);
+            }
         });
-        // Reset override when voices change; user can re-select
-        currentVoiceOverride = null;
     }
 
     function initSwiper() {
@@ -264,10 +310,7 @@
         utterance.rate = speechRate;
         utterance.pitch = 1;
         utterance.volume = 1;
-        // Prefer override if user selected a voice in the UI; fallback to default selectedVoice
-        if (currentVoiceOverride) {
-            utterance.voice = currentVoiceOverride;
-        } else if (selectedVoice) {
+        if (selectedVoice) {
             utterance.voice = selectedVoice;
         }
         utterance.onend = function () {
@@ -313,15 +356,6 @@
                 repeatCount = parseInt(btn.dataset.count, 10);
             });
         });
-
-        // Voice selection change (override) - only affects current read
-        var voiceSelect = document.getElementById('voiceSelect');
-        if (voiceSelect) {
-            voiceSelect.addEventListener('change', function () {
-                var name = voiceSelect.value;
-                currentVoiceOverride = voiceList.find(function (v) { return v.name === name; }) || null;
-            });
-        }
     }
 
     document.addEventListener('DOMContentLoaded', init);
