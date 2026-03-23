@@ -49,6 +49,16 @@
             touchAngle: 30,
             touchRatio: 0.8,
             resistanceRatio: 0.3,
+            breakpoints: {
+                768: {
+                    slidesPerView: 1.8,
+                    spaceBetween: 20
+                },
+                1024: {
+                    slidesPerView: 2.5,
+                    spaceBetween: 24
+                }
+            },
             on: {
                 slideChangeTransitionEnd: function () {
                     var activeIndex = swiper.activeIndex;
