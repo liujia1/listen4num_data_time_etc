@@ -7,6 +7,8 @@
     var swiper = null;
     var selectedVoice = null;
     var isSpeaking = false;
+    var useRandomVoice = false;
+    var availableVoices = [];
 
     var MONTHS = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -64,6 +66,9 @@
                     return bScore - aScore;
                 });
                 
+                // 保存所有可用语音
+                availableVoices = englishVoices;
+                
                 // 添加一个默认选项
                 var defaultOption = document.createElement('option');
                 defaultOption.value = '';
@@ -113,6 +118,20 @@
                 console.log('Selected voice:', selectedVoice);
             }
         });
+
+        // 随机发音人开关
+        var randomVoiceToggle = document.getElementById('randomVoiceToggle');
+        randomVoiceToggle.addEventListener('change', function() {
+            useRandomVoice = randomVoiceToggle.checked;
+            console.log('Random voice:', useRandomVoice);
+            
+            // 当开启随机发音人时，立即为当前幻灯片随机选择一个发音人
+            if (useRandomVoice && availableVoices.length > 0) {
+                var randomIndex = Math.floor(Math.random() * availableVoices.length);
+                selectedVoice = availableVoices[randomIndex];
+                console.log('Random voice enabled, selected:', selectedVoice.name);
+            }
+        });
     }
 
     function initSwiper() {
@@ -130,6 +149,12 @@
                     var totalSlides = swiper.slides.length;
                     if (activeIndex >= totalSlides - 1) {
                         addSlide();
+                    }
+                    // 切换幻灯片时，如果启用了随机发音人，则随机选择一个
+                    if (useRandomVoice && availableVoices.length > 0) {
+                        var randomIndex = Math.floor(Math.random() * availableVoices.length);
+                        selectedVoice = availableVoices[randomIndex];
+                        console.log('Slide changed, random voice selected:', selectedVoice.name);
                     }
                 }
             }
@@ -355,6 +380,7 @@
                 speechSynthesis.cancel();
                 isSpeaking = false;
                 playBtn.classList.remove('speaking');
+                // 停止时不改变 selectedVoice，保持当前发音人
                 return;
             }
             var content = slideEl._content;
@@ -364,10 +390,20 @@
         revealBtn.addEventListener('click', function () {
             var valueEl = slideEl.querySelector('.card-value');
             var placeholder = slideEl.querySelector('.card-placeholder');
-            valueEl.classList.add('revealed');
-            placeholder.classList.add('hidden');
-            revealBtn.disabled = true;
-            revealBtn.textContent = '已显示';
+            
+            if (valueEl.classList.contains('revealed')) {
+                // 关闭答案
+                valueEl.classList.remove('revealed');
+                placeholder.classList.remove('hidden');
+                revealBtn.disabled = false;
+                revealBtn.textContent = '显示答案';
+            } else {
+                // 显示答案
+                valueEl.classList.add('revealed');
+                placeholder.classList.add('hidden');
+                revealBtn.disabled = false;
+                revealBtn.textContent = '关闭答案';
+            }
         });
     }
 
@@ -402,9 +438,12 @@
         utterance.rate = speechRate;
         utterance.pitch = 1;
         utterance.volume = 1;
+        
+        // 使用当前选中的发音人（可能在切换幻灯片时已随机选择）
         if (selectedVoice) {
             utterance.voice = selectedVoice;
         }
+        
         utterance.onend = function () {
             if (onDone) onDone();
         };

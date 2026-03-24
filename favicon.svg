@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="50" cy="50" r="48" fill="url(#gradient)"/>
+  
+  <!-- 音符符号 -->
+  <g fill="white" opacity="0.95">
+    <!-- 主音符 -->
+    <path d="M 35 65 L 35 35 A 8 8 0 1 1 45 35 L 45 55 C 45 58 47 60 50 60 L 65 60 L 65 65 L 50 65 C 44 65 40 61 40 55 L 40 35 A 3 3 0 1 0 35 35 L 35 65 Z"/>
+    
+    <!-- 装饰小圆点 -->
+    <circle cx="55" cy="40" r="4"/>
+    <circle cx="65" cy="45" r="3"/>
+  </g>
+</svg>
