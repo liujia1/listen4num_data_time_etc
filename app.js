@@ -130,6 +130,8 @@
                 var randomIndex = Math.floor(Math.random() * availableVoices.length);
                 selectedVoice = availableVoices[randomIndex];
                 console.log('Random voice enabled, selected:', selectedVoice.name);
+                // 更新发音人选择下拉框
+                voiceSelect.value = selectedVoice.name;
             }
         });
     }
@@ -155,6 +157,11 @@
                         var randomIndex = Math.floor(Math.random() * availableVoices.length);
                         selectedVoice = availableVoices[randomIndex];
                         console.log('Slide changed, random voice selected:', selectedVoice.name);
+                        // 更新发音人选择下拉框
+                        var voiceSelect = document.getElementById('voiceSelect');
+                        if (voiceSelect) {
+                            voiceSelect.value = selectedVoice.name;
+                        }
                     }
                 }
             }
